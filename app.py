@@ -50,7 +50,7 @@ def home():
     if request.method == "POST":
         email_text = request.form["email_text"]
         result = predict_spam(email_text)
-    return render_template("index.html", result=result)
+    return render_template("templates/index.html", result=result)
 
 if __name__ == "__main__":
     app.run(debug=True)
