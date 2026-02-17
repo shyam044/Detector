@@ -8,8 +8,11 @@ nltk.data.path.append("./nltk_data")  # must be BEFORE WordNetLemmatizer import
 from nltk.stem import WordNetLemmatizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+<<<<<<< HEAD
+=======
+app = Flask(__name__, template_folder="templates")
+>>>>>>> 9eae8883792e38e584691dc1a00049e82a23618b
 
-app = Flask(__name__)
 
 # Load model and tokenizer
 model = tf.keras.models.load_model("model.h5")
