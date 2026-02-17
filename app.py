@@ -5,7 +5,8 @@ import pickle
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from nltk.stem import WordNetLemmatizer
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
+
 
 # Load model and tokenizer
 model = tf.keras.models.load_model("model.h5")
