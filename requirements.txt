@@ -1,8 +1,9 @@
 Flask
-tensorflow==2.12.0
+tensorflow==2.16.1
 numpy==1.23.5
 pandas
 nltk
 gunicorn
+
 
 
