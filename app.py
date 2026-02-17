@@ -2,49 +2,50 @@ import re
 from flask import Flask, render_template, request
 import tensorflow as tf
 import pickle
-import nltk
-nltk.data.path.append("./nltk_data")  # must be BEFORE WordNetLemmatizer import
-
-from nltk.stem import WordNetLemmatizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
 
 app = Flask(__name__, template_folder="templates")
 
-
-# Load model and tokenizer
+# Load the model and tokenizer
 model = tf.keras.models.load_model("model.h5")
 with open("tokenizer.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
-lemmatizer = WordNetLemmatizer()
+# Lightweight safer preprocessing (no NLTK, no WordNet)
+def simple_preprocess(text):
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s]", "", text)     # remove punctuation
+    return text.split()
 
 def predict_spam(email_text):
     original_text = email_text.lower()
-    
-    # --- STAGE 1: REGEX SCAM SIGNATURES (High Accuracy for SMS) ---
-    # Catching suspicious links (USPS/Phishing)
-    if re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', original_text):
+
+    # --- STAGE 1: REGEX SCAM SIGNATURES ---
+    if re.search(r'http[s]?://\S+', original_text):
         return "Spam (Suspicious Link Detected)"
-    
-    # Catching "Urgency + Fee" patterns common in USPS scams
-    scam_patterns = ['unpaid fee', 'pending delivery', 'action required', 'click here', 'package delivery']
-    if any(pattern in original_text for pattern in scam_patterns) and len(original_text) < 200:
+
+    scam_patterns = [
+        'unpaid fee',
+        'pending delivery',
+        'action required',
+        'click here',
+        'package delivery'
+    ]
+
+    if any(p in original_text for p in scam_patterns) and len(original_text) < 200:
         return "Spam (SMS Phishing Pattern)"
 
-    # --- STAGE 2: AI MODEL WITH DYNAMIC THRESHOLD ---
-    # Clean text (matching your training script)
-    words = [lemmatizer.lemmatize(w) for w in original_text.split()]
+    # --- STAGE 2: MODEL CLASSIFICATION ---
+    words = simple_preprocess(original_text)
     cleaned = " ".join(words)
-    
+
     sequence = tokenizer.texts_to_sequences([cleaned])
     padded = pad_sequences(sequence, maxlen=150, padding='post')
     prediction_score = model.predict(padded)[0][0]
 
-    # Rule: If it's a long message (News), we need 85% certainty to call it spam.
-    # If it's short (SMS), we only need 45% certainty.
+    # Dynamic confidence threshold
     threshold = 0.85 if len(original_text) > 250 else 0.45
-    
+
     if prediction_score > threshold:
         return "Spam"
     return "Ham"
