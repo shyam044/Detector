@@ -2,8 +2,11 @@ import re
 from flask import Flask, render_template, request
 import tensorflow as tf
 import pickle
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+import nltk
+nltk.data.path.append("./nltk_data")  # must be BEFORE WordNetLemmatizer import
+
 from nltk.stem import WordNetLemmatizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 app = Flask(__name__, template_folder="templates")
 
